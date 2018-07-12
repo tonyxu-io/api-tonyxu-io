@@ -1,0 +1,12 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /static
+  static_dir: static
+- url: /.*
+  script: main.app
+
+env_variables:
+  telegramWebHookURI: "https://api.telegram.org/bot602449923:AAEeHZ2MS4Bd8oQHHfgUrYPpMnVbztCtcxE"
