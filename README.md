@@ -1,4 +1,3 @@
-# my-api
+# Personal Notification Server
 
-Codebase for Flask app (Used as API) running in Google App Engine
-
+Codebase for Flask app running in Google App Engine as a personal notification server.
