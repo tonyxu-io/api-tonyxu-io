@@ -40,7 +40,14 @@ def ip():
 
 @app.route('/view/<target>', methods=['GET'])
 def view(target):
-    ipInfo = json.loads(urlfetch.fetch(url='https://api.ipdata.co/' + request.remote_addr + '?api-key=' + config.ip_key,validate_certificate=True).content)
-    responseText = "Visit:" + target + "%0AIP:" + ipInfo["ip"] + "%0ACity:" + ipInfo["city"] + "%0ACountry:" + ipInfo["emoji_flag"] + ipInfo["country_name"] + "%0AOrganization:" + ipInfo["organisation"]
-    requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755" + "&text=" + responseText
-    return jsonify(json.loads(urlfetch.fetch(url=requestUrl,validate_certificate=True).content))
+    if request.remote_addr in ['::1','2601:646:c601:7239:8c20:8c9e:6790:6127']:
+        return 'Page Not Found.',404
+    else:
+        ipInfo = json.loads(urlfetch.fetch(url='https://api.ipdata.co/' + request.remote_addr + '?api-key=' + config.ip_key,validate_certificate=True).content)
+        responseText = "Visit:" + target + "%0AIP:" + ipInfo["ip"] + "%0ACity:" + ipInfo["city"] + "%0ACountry:" + ipInfo["emoji_flag"] + ipInfo["country_name"] + "%0AOrganization:" + ipInfo["organisation"]
+        requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755" + "&text=" + responseText
+        return jsonify(json.loads(urlfetch.fetch(url=requestUrl,validate_certificate=True).content))
+
+@app.errorhandler(Exception)
+def exception_handler(error):
+    return "Internal Server Error:"  + repr(error)
