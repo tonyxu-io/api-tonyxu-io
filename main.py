@@ -48,6 +48,38 @@ def view(target):
         requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755" + "&text=" + responseText
         return jsonify(json.loads(urlfetch.fetch(url=requestUrl,validate_certificate=True).content))
 
+@app.route('/quotes', methods=['GET'])
+def quotes():
+    btcQuotes = json.loads(urlfetch.fetch(url='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD').content)
+    stockQuotes = json.loads(urlfetch.fetch(url='https://api.iextrading.com/1.0/stock/market/batch?symbols=msft,fb&types=quote&range=1m&last=1&filter=latestPrice').content)
+    stockQuotes['BTC'] = btcQuotes['USD']
+    responseText = "Quotes Update:" + "%0ABTC: " + str(btcQuotes["USD"]) + " %c3%97 0.5775 = " + "{:,}".format(btcQuotes["USD"]*0.5775) + "%0AMSFT: " +  str(stockQuotes["MSFT"]["quote"]["latestPrice"]) + " %c3%97 1699 = " + "{:,}".format(stockQuotes["MSFT"]["quote"]["latestPrice"]*1699)
+    requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755" + "&text=" + responseText
+    urlfetch.fetch(url=requestUrl).content
+    return jsonify(stockQuotes)
+
+@app.route('/test', methods=['GET'])
+def test():
+    total = 0
+    stocksArr = [k for k in config.stocks.keys()]
+    btcQuotes = json.loads(urlfetch.fetch(url='https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD').content)
+    stockQuotes = json.loads(urlfetch.fetch(url='https://api.iextrading.com/1.0/stock/market/batch?symbols=' + ",".join(config.stocks) + '&types=quote&range=1m&last=1&filter=latestPrice').content)
+    stockQuotes['BTC'] = btcQuotes['USD']
+    stockText = ""
+    btcText = "Quotes Update:" + "%0ABTC: " + str(btcQuotes["USD"]) + " %c3%97 " + str(config.btc) + " = " + "{:,}".format(btcQuotes["USD"]*config.btc) + "%0A"
+    total += btcQuotes["USD"]*config.btc
+    for stockIndex in range(len(stocksArr)):
+        name = stocksArr[stockIndex]
+        price = stockQuotes[stocksArr[stockIndex]]["quote"]["latestPrice"]
+        amount = config.stocks[stocksArr[stockIndex]]
+        total += (price * amount)
+        stockText += name + ": " + str(price) + " %c3%97 " + str(amount) + " = " + "{:,}".format(price * amount) + "%0A"
+    # responseText = "Quotes Update:" + "%0ABTC: " + str(btcQuotes["USD"]) + " %c3%97 " + config["btc"] + " = " + "{:,}".format(btcQuotes["USD"]*config["btc"]) + "%0AMSFT: " +  str(stockQuotes["MSFT"]["quote"]["latestPrice"]) + " %c3%97 1699 = " + "{:,}".format(stockQuotes["MSFT"]["quote"]["latestPrice"]*1699)
+    responseText = btcText + stockText + "Total: " + str(total)
+    requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755" + "&text=" + responseText
+    urlfetch.fetch(url=requestUrl).content
+    return jsonify(stockQuotes)
+
 @app.errorhandler(Exception)
 def exception_handler(error):
     return "Internal Server Error:"  + repr(error)
