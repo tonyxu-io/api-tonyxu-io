@@ -40,15 +40,6 @@ def telegramBot(target):
 def ip():
     return Response(request.remote_addr, mimetype="text/text")
 
-@app.route('/view/<target>', methods=['GET'])
-def view(target):
-    ip = '73.93.154.138' if request.remote_addr == '::1' else request.remote_addr
-    ipInfo = json.loads(urlfetch.fetch(url='https://api.ipdata.co/' + ip + '?api-key=' + config.ip_key,validate_certificate=True).content)
-    target = request.args.get('page') or target
-    responseText = '*Visit: {}* %0AIP: [{}](https://ipinfo.io/{}) %0ACity: {} %0ACountry: {}{} %0AOrganization: {}'.format(target, ip, ip, ipInfo["city"], ipInfo["emoji_flag"], ipInfo["country_name"], ipInfo["organisation"])
-    requestUrl = config.telegramWebHookURI + "/sendMessage?chat_id=507960755&parse_mode=Markdown&disable_web_page_preview=true&text=" + responseText
-    return jsonify(json.loads(urlfetch.fetch(url=requestUrl,validate_certificate=True).content))
-
 @app.route('/quotes', methods=['GET'])
 def quotes():
     total = 0
@@ -70,23 +61,6 @@ def quotes():
     urlfetch.fetch(url=requestUrl).content
     return jsonify(stockQuotes)
 
-@app.route('/housing', methods=['GET'])
-def housing():
-    eavesHousing('CA055','Eaves Creekside')
-    eavesHousing('CA575','Eaves Middlefield')
-    return 'OK'
-
-def eavesHousing(communityCode, communityName):
-    houseResponse = json.loads(urlfetch.fetch(url='https://api.avalonbay.com/json/reply/ApartmentSearch?communityCode=' + communityCode + '&min=2000&max=3000&desiredMoveInDate=2018-09-01T07:00:00.000Z').content)
-    availableFloorPlanTypes = houseResponse["results"]["availableFloorPlanTypes"]
-    oneBDFloorPlansType = [availableFloorPlanType for availableFloorPlanType in availableFloorPlanTypes if availableFloorPlanType['floorPlanTypeCode'] == '1BD'][0]
-    availableFloorPlans = oneBDFloorPlansType["availableFloorPlans"]
-    responseText = "*House Quotes:* " + communityName + "%0A"
-    for availableFloorPlan in availableFloorPlans:
-        for apartment in sorted(availableFloorPlan["finishPackages"][0]["apartments"], key=lambda k: k['pricing']['effectiveRent']):
-            responseText += "Size:" + str(apartment["apartmentSize"]) + " Price:" + str(apartment["pricing"]["effectiveRent"]) + " Floor:" + str(apartment["floor"]) + " Date:" + time.strftime('%Y-%m-%d', time.localtime(float(filter(str.isdigit, str(apartment["pricing"]["availableDate"])))/1000)) + "%0A"
-    requestUrl = config.telegramWebHookURI + "/sendMessage?parse_mode=Markdown&chat_id=507960755" + "&text=" + responseText
-    urlfetch.fetch(url=requestUrl).content
 
 @app.errorhandler(Exception)
 def exception_handler(error):
